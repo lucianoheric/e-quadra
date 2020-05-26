@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 @click="show('hello-world')" style="display: inline; float: left">Usuário</h1>
+        <h1 @click="deleteUser()" style="display: inline; float: left">Usuário</h1>
         <img src="http://localhost:8081/images/newuser_img.png" class="img_newuser" @click="newUser()" alt="Novo usuário"/>
         <div>
           <form id="form_user" @submit="addUser">
@@ -27,15 +27,23 @@
             <button>Incluir</button>
           </form>          
         </div>
+        <div id="reg-user-modal" v-show="false">
+        </div>
         <ol>                 
             <li @click="getdata(user)" v-for="user in users" :key="user.id">
                 {{ user.name }}
             </li>
         </ol>   
-
-        <modal name="hello-world">
-          hello, world!
-        </modal>
+        <modaluser 
+            :login="objUser.login"
+            :name="objUser.name"
+            :id="objUser.id" 
+            :passwd="objUser.passwd"
+            :is_active="objUser.is_active"
+            :ts_created="objUser.ts_created" 
+            :ts_removed="objUser.ts_removed"
+            :visivel="true"
+        />
 
     </div>
 
@@ -43,6 +51,8 @@
 </template>
 
 <script>
+import Modaluser from './Modal-user.vue';
+
 export default {
 
   mounted(){
@@ -51,11 +61,15 @@ export default {
   
   },
 
+  components: {
+    'modaluser': Modaluser
+  },
+  
   data(){
 
     return {
-        users:[],
-
+        users:[], 
+        objUserModal:[],
         objUser: {
           id : null,
           name: '',
@@ -81,12 +95,22 @@ export default {
 
     addUser(){
       //var curdate = new Date;
-      this.objUser.ts_created = (new Date).getDate();
+      this.objUser.ts_created = Date.now();
       this.objUser.is_active = true;
       this.objUser.name = this.objUser.name.toUpperCase();
       this.$http.post('http://localhost:8080/api/user', this.objUser)
       .then(this.getUsers(), err => console.log(err));    
     },
+
+    deleteUser(){
+      if(confirm('Confirma a exclusão do usuário ' + this.objUser.name + '?')){
+        this.objUser.ts_removed = Date.now();
+        this.objUser.is_active = false;
+        this.objUser.name = this.objUser.name.toUpperCase();
+        this.$http.delete('http://localhost:8080/api/user', this.objUser)
+        .then(this.getUsers(), err => console.log(err));    
+      }
+    },    
 
     cleandata(){
       this.objUser.id         = null;
@@ -108,29 +132,9 @@ export default {
       atrFocus.focus();
     },
 
-    show() {
-      this.$modal.show('dialog', {
-        title: 'Alert!',
-        text: 'You are too awesome',
-        buttons: [
-          {
-            title: 'Deal with it',
-            handler: () => { alert('Woot!') }
-          },
-          {
-            title: '',       // Button title
-            default: true,    // Will be triggered by default if 'Enter' pressed.
-            handler: () => {} // Button click handler
-          },
-          {
-            title: 'Close'
-          }
-        ]
-      })
-    },
-
-    hide(modalname) {
-      this.$modal.hide(modalname);
+    show(modalid){
+      var modl = document.getElementById(modalid);
+      modl.style.visibility = 'visible';
     }
     
   }
@@ -140,7 +144,7 @@ export default {
 
 <style scoped>
 
-.input_reistration {
+.input_reistration {  
   padding-left: 40px;
   color: darkgrey;
   border-radius: 10px;  
@@ -201,5 +205,6 @@ textarea:focus, input:focus, select:focus{
   height: 32px;
   cursor: pointer;
 }
+
 
 </style>
