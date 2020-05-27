@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 @click="deleteUser()" style="display: inline; float: left">Usuário</h1>
+        <h1 @click="delUser()" style="display: inline; float: left">Usuário</h1>
         <img src="http://localhost:8081/images/newuser_img.png" class="img_newuser" @click="newUser()" alt="Novo usuário"/>
         <div>
           <form id="form_user" @submit="addUser">
@@ -24,6 +24,14 @@
                   v-model="objUser.passwd"
                   class="input_reistration image_passwd"  
                   placeholder="senha"/> 
+            <div style="height: 5px"></div>
+            <label>Usuário ativo</label>
+            <input type="checkbox" 
+                  id="input_903"
+                  name="checkActive"
+                  v-model="objUser.is_active"    
+                  placeholder="Ativo"/>   
+            <div style="height: 5px"></div>            
             <button>Incluir</button>
           </form>          
         </div>
@@ -102,15 +110,19 @@ export default {
       .then(this.getUsers(), err => console.log(err));    
     },
 
-    deleteUser(){
+    delUser(){
       if(confirm('Confirma a exclusão do usuário ' + this.objUser.name + '?')){
         this.objUser.ts_removed = Date.now();
         this.objUser.is_active = false;
-        this.objUser.name = this.objUser.name.toUpperCase();
-        this.$http.delete('http://localhost:8080/api/user', this.objUser)
+        this.$http.put('http://localhost:8080/api/user', this.objUser)
         .then(this.getUsers(), err => console.log(err));    
       }
-    },    
+    },  
+    editUser(){
+      //this.objUser = document.getElementById('input_900');
+      this.$http.put('http://localhost:8080/api/user', this.objUser)
+      .then(this.getUsers(), err => console.log(err));    
+    }, 
 
     cleandata(){
       this.objUser.id         = null;
